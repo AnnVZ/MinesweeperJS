@@ -1,0 +1,28 @@
+<html>
+
+<head>
+    <link href='styles.css' rel='stylesheet'>
+</head>
+
+<body onload='loadField()'>
+    <div class="levelDiv">
+        <h4 class='levelH4'>Level:</h4>
+        <label class='levelLabel' onclick='setType(this.id)' id='0'><input type='radio' class='radioLevel' name='radio'
+                id='radio1' checked>Beginner</label>
+        <label class='levelLabel' onclick='setType(this.id)' id='1'><input type='radio' class='radioLevel' name='radio'
+                id='radio2'>Amateur</label>
+        <label class='levelLabel' onclick='setType(this.id)' id='2'><input type='radio' class='radioLevel' name='radio'
+                id='radio3'>Professional</label>
+        <input type='button' class='buttonNewGame' value='New Game' onclick='startNewGame()'>
+    </div>
+    <div id='statistics'>
+        <span id='timer'>00:00:00:00</span>
+        <span id='mines'>Mines Left: </span>
+        <span id='minesNumber'></span>
+    </div>
+    <div id='result'></div>
+    <h1 class='headTitle'>Minesweeper<br>Black</h1>
+    <script src='code.js'></script>
+</body>
+
+</html>
