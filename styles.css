@@ -69,19 +69,27 @@ body {
     user-select: none;
 }
 
-#mines {
-    margin-left: 30px;    
-}
-
 img {
     -webkit-user-drag: none;
 }
 
 #result {
     position: absolute;
-    right: 120px;
+    right: 60px;
     font-size: 80px;
     color: red;
     cursor: default;
     user-select: none;
+}
+
+#smileSpan {
+    margin: 0;
+    padding: 0;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+#smileImage {
+    height: 40px;
+    width: 40px;
 }

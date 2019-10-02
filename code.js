@@ -1,4 +1,4 @@
-let sizePX = 40;
+let sizePX = 41;
 
 let defaultN = [9, 16, 16];
 let defaultM = [9, 16, 30];
@@ -24,6 +24,8 @@ let timer;
 
 function startNewGame() {
     let mainDiv = document.getElementById('mainDiv').remove();
+    let smile = document.getElementById('smileImage').remove();
+    clearTimer();
     loadField();
 }
 
@@ -71,8 +73,6 @@ function stopTimer() {
 }
 
 function loadField() {
-    document.getElementById("minesNumber").innerHTML = minesNumber;
-    document.getElementById('result').innerHTML = '';
     cellsOpened = 0;
     cellsToOpen = n * m - minesNumber;
     minesLeft = minesNumber;
@@ -122,6 +122,18 @@ function loadField() {
         }
     }
 
+    document.getElementById("minesNumber").innerHTML = minesNumber;
+    document.getElementById('result').innerHTML = '';
+    let smileImage = document.createElement('img');
+    smileImage.id = 'smileImage';
+    smileImage.src = 'img/smileUp.png';
+    smileImage.addEventListener('click', function () {
+        startNewGame();
+    });
+    smileImage.addEventListener('mousedown', function () {
+        this.src = 'img/smileDown.png'
+    });
+    document.getElementById('smileSpan').appendChild(smileImage);
     let mainDiv = document.createElement('div');
     mainDiv.id = 'mainDiv';
     mainDiv.oncontextmenu = () => false;
@@ -135,7 +147,7 @@ function loadField() {
             image.width = sizePX;
             image.src = 'img/unopenedCell.png';
             image.id = i + ' ' + j;
-            // image.ondragstart = () => false;
+            image.ondragstart = () => false;
             image.addEventListener('click', function () {
                 if (!gameOver) {
                     if (firstClick) {
@@ -192,8 +204,7 @@ function loadField() {
                                 if (!(x == i && y == j)) {
                                     if (x >= 0 && x < n && j >= 0 && j < m) {
                                         if (userField[x][y] == -2) {
-                                            currentImage = document.getElementById(x + ' ' + y);
-                                            openCell(x, y, currentImage, true);
+                                            openCell(x, y, document.getElementById(x + ' ' + y), true);
                                         }
                                     }
                                 }
@@ -202,17 +213,39 @@ function loadField() {
                     }
                 }
             });
-            let mouseEntered = false;
-            image.addEventListener('mouseenter', function () {
+            image.addEventListener('mousedown', function () {
                 if (userField[i][j] == -2) {
                     this.src = 'img/emptyCell.png';
-                    mouseEntered = true;
+                    document.getElementById('smileImage').src = 'img/smileOps.png';
                 }
             });
-            image.addEventListener('mouseleave', function () {
-                if (mouseEntered && userField[i][j] == -2) {
+            image.addEventListener('mouseup', function (event) {
+                if (userField[i][j] == -2) {
+                    document.getElementById('smileImage').src = 'img/smileUp.png';
+                    if (event.button == 0) {
+                        if (!gameOver) {
+                            if (firstClick) {
+                                startTimer();
+                                firstClick = false;
+                            }
+                            let idArr = this.id.split(" ");
+                            let x = Number(idArr[0]);
+                            let y = Number(idArr[1]);
+                            if (userField[x][y] == -2) {
+                                openCell(x, y, this, false);
+                            }
+                        }
+                    }
+                }
+            });
+            image.addEventListener('mouseenter', function (event) {
+                if (userField[i][j] == -2 && event.buttons == 1) {
+                    this.src = 'img/emptyCell.png';
+                }
+            });
+            image.addEventListener('mouseout', function () {
+                if (userField[i][j] == -2) {
                     this.src = 'img/unopenedCell.png';
-                    mouseEntered = false;
                 }
             });
             div.appendChild(image);
@@ -228,7 +261,7 @@ function openWholeUserField() {
             if (userField[i][j] == -3) {
                 if (field[i][j] != -1) {
                     userField[i][j] = -5;
-                    document.getElementById(i + ' ' + j).src = 'img/crossedMine.png';
+                    changeImageSrcById(i, j, 'crossedMine');
                 }
             }
             else if (field[i][j] > 0) {
@@ -239,13 +272,13 @@ function openWholeUserField() {
             else if (field[i][j] == 0) {
                 if (userField[i][j] == -2) {
                     userField[i][j] = field[i][j];
-                    document.getElementById(i + ' ' + j).src = 'img/emptyCell.png';
+                    changeImageSrcById(i, j, 'emptyCell');
                 }
             }
             else if (field[i][j] == -1) {
                 if (userField[i][j] == -2) {
                     userField[i][j] = -1;
-                    document.getElementById(i + ' ' + j).src = 'img/minedCell.png';
+                    changeImageSrcById(i, j, 'minedCell');
                 }
             }
         }
@@ -257,7 +290,7 @@ function openFlagsLeft() {
         for (let j = 0; j < m; ++j) {
             if (userField[i][j] == -2) {
                 userField[i][j] = -3;
-                document.getElementById(i + ' ' + j).src = 'img/flaggedCell.png';
+                changeImageSrcById(i, j, 'flaggedCell');
             }
         }
     }
@@ -281,6 +314,7 @@ function openCell(x, y, img, doubleClick) {
             userField[x][y] = -4;
             img.src = 'img/redMine.png';
         }
+        document.getElementById('smileImage').src = 'img/smileDead.png';
         openWholeUserField();
     }
     else if (field[x][y] == 0) {
@@ -300,6 +334,7 @@ function openCell(x, y, img, doubleClick) {
         minesLeft = 0;
         document.getElementById('minesNumber').innerHTML = '0';
         document.getElementById('result').innerHTML = 'You Win!';
+        document.getElementById('smileImage').src = 'img/smileWinner.png';
         openFlagsLeft();
     }
 }
@@ -324,8 +359,12 @@ function dfs(i, j) {
         }
     }
     else {
-        document.getElementById(i + ' ' + j).src = 'img/' + userField[i][j] + '.png';
+        changeImageSrcById(i, j, userField[i][j]);
     }
+}
+
+function changeImageSrcById(i, j, name) {
+    document.getElementById(i + ' ' + j).src = 'img/' + name + '.png';
 }
 
 
