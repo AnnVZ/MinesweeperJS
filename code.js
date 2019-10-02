@@ -21,7 +21,6 @@ let gameOver; //boolean
 let time;
 let timer;
 
-
 function startNewGame() {
     let mainDiv = document.getElementById('mainDiv').remove();
     let smile = document.getElementById('smileImage').remove();
@@ -30,7 +29,6 @@ function startNewGame() {
 }
 
 function setType(id) {
-    clearTimer();
     let i = Number(id);
     if (minesNumber != defaultMinesNumber[i] || gameOver) {
         n = defaultN[i];
@@ -72,7 +70,7 @@ function stopTimer() {
     clearInterval(timer);
 }
 
-function loadField() {
+function setVariables() {
     cellsOpened = 0;
     cellsToOpen = n * m - minesNumber;
     minesLeft = minesNumber;
@@ -90,6 +88,9 @@ function loadField() {
         field.push(arrField);
         userField.push(arrUserField);
     }
+}
+
+function createRandomField() {
     for (let i = 0; i < minesNumber; ++i) {
         let x = Math.floor(Math.random() * (n - 1));
         let y = Math.floor(Math.random() * (m - 1));
@@ -121,9 +122,17 @@ function loadField() {
             }
         }
     }
+}
 
-    document.getElementById("minesNumber").innerHTML = minesNumber;
-    document.getElementById('result').innerHTML = '';
+function showResult(result) {
+    document.getElementById('result').innerHTML = result;
+}
+
+function showMinesLeft(num) {
+    document.getElementById("minesNumber").innerHTML = num;
+}
+
+function showSmile() {
     let smileImage = document.createElement('img');
     smileImage.id = 'smileImage';
     smileImage.src = 'img/smileUp.png';
@@ -138,13 +147,20 @@ function loadField() {
     });
     smileImage.oncontextmenu = () => false;
     document.getElementById('smileSpan').appendChild(smileImage);
+}
+
+function loadField() {
+    setVariables();
+    createRandomField();
+
+    showResult('');
+    showSmile();
+    showMinesLeft(minesNumber);
     let mainDiv = document.createElement('div');
     mainDiv.id = 'mainDiv';
     mainDiv.oncontextmenu = () => false;
-    mainDiv.width = m * sizePX;
     for (let i = 0; i < n; ++i) {
         let div = document.createElement('div');
-        div.id = 'div ' + i;
         for (let j = 0; j < m; ++j) {
             let image = document.createElement('img');
             image.height = sizePX;
@@ -163,13 +179,13 @@ function loadField() {
                         --minesLeft;
                         // if (minesLeft < 0)
                         // minesLeft = 0;
-                        document.getElementById("minesNumber").innerHTML = minesLeft;
+                        showMinesLeft(minesLeft);
                         this.src = 'img/flaggedCell.png';
                     }
                     else if (userField[i][j] == -3) {
                         userField[i][j] = -2;
                         ++minesLeft;
-                        document.getElementById("minesNumber").innerHTML = minesLeft;
+                        showMinesLeft(minesLeft);
                         this.src = 'img/unopenedCell.png';
                     }
                 }
@@ -206,23 +222,20 @@ function loadField() {
             image.addEventListener('mousedown', function () {
                 if (userField[i][j] == -2) {
                     this.src = 'img/emptyCell.png';
-                    document.getElementById('smileImage').src = 'img/smileOps.png';
+                    changeSmileImage('smileOps');
                 }
             });
             image.addEventListener('mouseup', function (event) {
                 if (userField[i][j] == -2 || userField[i][j] == -3) {
-                    document.getElementById('smileImage').src = 'img/smileUp.png';
+                    changeSmileImage('smileUp');
                     if (event.button == 0) {
                         if (!gameOver) {
                             if (firstClick) {
                                 startTimer();
                                 firstClick = false;
                             }
-                            let idArr = this.id.split(" ");
-                            let x = Number(idArr[0]);
-                            let y = Number(idArr[1]);
-                            if (userField[x][y] == -2) {
-                                openCell(x, y, this, false);
+                            if (userField[i][j] == -2) {
+                                openCell(i, j, this, false);
                             }
                         }
                     }
@@ -245,13 +258,13 @@ function loadField() {
     document.body.appendChild(mainDiv);
 }
 
-function openWholeUserField() {
+function openWholeUserField() { //game over
     for (let i = 0; i < n; ++i) {
         for (let j = 0; j < m; ++j) {
             if (userField[i][j] == -3) {
                 if (field[i][j] != -1) {
                     userField[i][j] = -5;
-                    changeImageSrcById(i, j, 'crossedMine');
+                    changeCellSrcById(i, j, 'crossedMine');
                 }
             }
             else if (field[i][j] > 0) {
@@ -262,25 +275,25 @@ function openWholeUserField() {
             else if (field[i][j] == 0) {
                 if (userField[i][j] == -2) {
                     userField[i][j] = field[i][j];
-                    changeImageSrcById(i, j, 'emptyCell');
+                    changeCellSrcById(i, j, 'emptyCell');
                 }
             }
             else if (field[i][j] == -1) {
                 if (userField[i][j] == -2) {
                     userField[i][j] = -1;
-                    changeImageSrcById(i, j, 'minedCell');
+                    changeCellSrcById(i, j, 'minedCell');
                 }
             }
         }
     }
 }
 
-function openFlagsLeft() {
+function openFlagsLeft() { //you win
     for (let i = 0; i < n; ++i) {
         for (let j = 0; j < m; ++j) {
             if (userField[i][j] == -2) {
                 userField[i][j] = -3;
-                changeImageSrcById(i, j, 'flaggedCell');
+                changeCellSrcById(i, j, 'flaggedCell');
             }
         }
     }
@@ -299,12 +312,12 @@ function openCell(x, y, img, doubleClick) {
     else if (field[x][y] == -1) {
         stopTimer();
         gameOver = true;
-        document.getElementById('result').innerHTML = 'Game Over!';
+        showResult('Game Over!');
         if (!doubleClick) {
             userField[x][y] = -4;
             img.src = 'img/redMine.png';
         }
-        document.getElementById('smileImage').src = 'img/smileDead.png';
+        changeSmileImage('smileDead');
         openWholeUserField();
     }
     else if (field[x][y] == 0) {
@@ -322,9 +335,9 @@ function openCell(x, y, img, doubleClick) {
         stopTimer();
         gameOver = true;
         minesLeft = 0;
-        document.getElementById('minesNumber').innerHTML = '0';
-        document.getElementById('result').innerHTML = 'You Win!';
-        document.getElementById('smileImage').src = 'img/smileWinner.png';
+        showMinesLeft(minesLeft);
+        showResult('You Win!');
+        changeSmileImage('smileWinner');
         openFlagsLeft();
     }
 }
@@ -335,7 +348,7 @@ function dfs(i, j) {
     labels[i][j] = 1;
     userField[i][j] = field[i][j];
     if (userField[i][j] == 0) {
-        document.getElementById(i + ' ' + j).src = 'img/emptyCell.png';
+        changeCellSrcById(i, j, 'emptyCell');
         for (let x = i - 1, count1 = 1; count1 <= 3; ++count1, ++x) {
             for (let y = j - 1, count2 = 1; count2 <= 3; ++count2, ++y) {
                 if (!(x == i && y == j)) {
@@ -349,14 +362,17 @@ function dfs(i, j) {
         }
     }
     else {
-        changeImageSrcById(i, j, userField[i][j]);
+        changeCellSrcById(i, j, userField[i][j]);
     }
 }
 
-function changeImageSrcById(i, j, name) {
+function changeCellSrcById(i, j, name) {
     document.getElementById(i + ' ' + j).src = 'img/' + name + '.png';
 }
 
+function changeSmileImage(name) {
+    document.getElementById('smileImage').src = 'img/' + name + '.png';
+}
 
 //field:
 //1-8 числа
