@@ -133,6 +133,10 @@ function loadField() {
     smileImage.addEventListener('mousedown', function () {
         this.src = 'img/smileDown.png'
     });
+    smileImage.addEventListener('mouseup', function () {
+        this.src = 'img/smileUp.png'
+    });
+    smileImage.oncontextmenu = () => false;
     document.getElementById('smileSpan').appendChild(smileImage);
     let mainDiv = document.createElement('div');
     mainDiv.id = 'mainDiv';
@@ -148,20 +152,6 @@ function loadField() {
             image.src = 'img/unopenedCell.png';
             image.id = i + ' ' + j;
             image.ondragstart = () => false;
-            image.addEventListener('click', function () {
-                if (!gameOver) {
-                    if (firstClick) {
-                        startTimer();
-                        firstClick = false;
-                    }
-                    let idArr = this.id.split(" ");
-                    let x = Number(idArr[0]);
-                    let y = Number(idArr[1]);
-                    if (userField[x][y] == -2) {
-                        openCell(x, y, this, false);
-                    }
-                }
-            });
             image.addEventListener('contextmenu', function () {
                 if (!gameOver) {
                     if (firstClick) {
@@ -220,7 +210,7 @@ function loadField() {
                 }
             });
             image.addEventListener('mouseup', function (event) {
-                if (userField[i][j] == -2) {
+                if (userField[i][j] == -2 || userField[i][j] == -3) {
                     document.getElementById('smileImage').src = 'img/smileUp.png';
                     if (event.button == 0) {
                         if (!gameOver) {
@@ -243,7 +233,7 @@ function loadField() {
                     this.src = 'img/emptyCell.png';
                 }
             });
-            image.addEventListener('mouseout', function () {
+            image.addEventListener('mouseleave', function () {
                 if (userField[i][j] == -2) {
                     this.src = 'img/unopenedCell.png';
                 }
